@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Master Hub",
+  "description": "All-platform Master App and open directory for Discord Roleplay and Multi-TCG communities featuring a dynamic client launcher, arbitrary-precision Card Vault, unified interactive tabletop sandbox, Markdown Lore Wiki, Discord RP Webhook broadcaster, and one-tap JSON export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

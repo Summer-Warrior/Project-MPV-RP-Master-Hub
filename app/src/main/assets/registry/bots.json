@@ -1,0 +1,34 @@
+[
+  {
+    "id": "discord-nexus-central",
+    "name": "Nexus Multi-TCG & RP Central",
+    "category": "RP Server",
+    "description": "Primary community Discord hub for cross-franchise tabletop duels, lore worldbuilding, tournament signups, and custom card pack testing.",
+    "inviteUrl": "https://discord.com/invite/nexus-master-hub",
+    "tags": ["RP Lore", "Multi-TCG", "Tournaments"]
+  },
+  {
+    "id": "bot-nexus-oracle",
+    "name": "Nexus Oracle Card Lookup Bot",
+    "category": "Bot Invite",
+    "description": "OAuth2 invite link for a community slash-command bot supporting Yu-Gi-Oh!, MTG, and custom JSON registry card previews inside Discord channels.",
+    "inviteUrl": "https://discord.com/oauth2/authorize?client_id=1000000000000000000&permissions=2147485696&scope=bot%20applications.commands",
+    "tags": ["Slash Commands", "Card Search", "OAuth2"]
+  },
+  {
+    "id": "tool-edopro-discord-guide",
+    "name": "ProjectIgnis Community Hub",
+    "category": "RP Tool",
+    "description": "Official upstream repository and issue tracker for EDOPro custom card scripting, Lua documentation, and deck sharing guides.",
+    "inviteUrl": "https://github.com/ProjectIgnis/EDOPro",
+    "tags": ["Lua Scripts", "EDOPro", "Reference"]
+  },
+  {
+    "id": "tool-cardforge-wiki",
+    "name": "Card-Forge Community Docs",
+    "category": "RP Tool",
+    "description": "Official upstream Forge repository with Adventure mode docs, custom set definitions, and release builds for desktop & Android.",
+    "inviteUrl": "https://github.com/Card-Forge/forge",
+    "tags": ["MTG", "Custom Sets", "Forge"]
+  }
+]

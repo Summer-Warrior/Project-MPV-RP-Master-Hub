@@ -1,0 +1,60 @@
+{
+  "articles": [
+    {
+      "id": "wiki-nexus-convergence",
+      "title": "The Nexus Convergence Protocol",
+      "category": "World Lore",
+      "summary": "How the fractured realms of Duel Monsters, the Blind Eternities, and custom RP timelines merged into the Orbital Nexus Citadel.",
+      "markdownContent": "# The Nexus Convergence Protocol\n\nIn Year **2199 AE**, the dimensional relay aboard the **Astral Citadel** experienced a harmonic cascade, weaving multiple trading card cosmologies into a single unified dueling lattice.\n\n## Core Rules of the Lattice\n- **Arbitrary Energy Scaling:** High-tier cosmic duels transcend standard 8,000 LP ceilings, requiring 21-digit precision telemetry.\n- **Cross-Format Resonance:** Duelists can invoke both **5-Zone Summons** and **Mana Stack Instants** inside Hybrid Crossover 6-Lane arenas.\n- **Open Federation:** Any guild may publish new card packs via raw JSON registries.\n\n> \"When the lanes align, every realm answers the summon.\"\n\n### Key Artifacts\n- **Chrono-Weave Nexus Gate** — Stabilizes multi-ruleset battlefields.\n- **Singularity Overdrive Pulse** — Emergency stack negation surge.",
+      "linkedCardIds": ["nx-chrono-gate", "nx-singularity-pulse", "nx-astral-sovereign"],
+      "linkedCharacterIds": ["char-kael-voss", "char-seraphina-valen"],
+      "updatedAt": "2026-11-20"
+    },
+    {
+      "id": "wiki-astral-citadel",
+      "title": "Astral Citadel & Orbital Sectors",
+      "category": "Faction",
+      "summary": "Headquarters of the Vanguard Keepers who maintain the federated archives and oversee cross-realm tournaments.",
+      "markdownContent": "# Astral Citadel\n\nSuspended above the obsidian void, the **Astral Citadel** serves as neutral ground for all Discord RP factions.\n\n## Sectors\n1. **Sector Alpha (The Vault):** Houses every indexed 8-digit, 21-digit, and UUID card record.\n2. **Sector Beta (The Unified Arena):** Configurable holographic tabletop capable of shifting between 5-Zone, 3-Zone Speed, MTG Battlefield, and 6-Lane Hybrid.\n3. **Sector Gamma (Relay Comms):** Routes live RP duel broadcasts to allied Discord channels via secure webhooks.",
+      "linkedCardIds": ["nx-astral-sovereign", "mtg-nexus-spire-land", "ygo-photon-drake"],
+      "linkedCharacterIds": ["char-kael-voss"],
+      "updatedAt": "2026-11-18"
+    },
+    {
+      "id": "wiki-eclipse-syndicate",
+      "title": "The Eclipse Syndicate Timeline",
+      "category": "Timeline",
+      "summary": "Chronicle of the rogue arcanists who pioneered forbidden stack-interruption tactics across the outer rim.",
+      "markdownContent": "# The Eclipse Syndicate\n\nFormed after the **Third Shattering**, the Eclipse Syndicate operates from hidden orbital relays.\n\n## Notable Eras\n- **Cycle 01:** Discovery of the Obsidian Rift Arcanist manuscript.\n- **Cycle 04:** First recorded 12-link Chain/Stack paradox resolved without reality collapse.\n- **Cycle 09:** Truce signed at the Nexus Master Hub Summit.",
+      "linkedCardIds": ["ygo-void-magician", "mtg-void-sentinel"],
+      "linkedCharacterIds": ["char-seraphina-valen"],
+      "updatedAt": "2026-11-15"
+    }
+  ],
+  "characters": [
+    {
+      "id": "char-kael-voss",
+      "name": "Kael Voss",
+      "title": "Vanguard Arbiter of the Cyan Grid",
+      "avatarUrl": "local://img_avatar_duelist",
+      "faction": "Astral Citadel Vanguard",
+      "catchphrase": "Lock the lanes. Let the numbers decide fate.",
+      "summonChant": "From beyond the 21st coordinate of the Astral Lattice, shatter the ceiling of finite worlds! Descend now — Astral Cyber Dragon Sovereign!",
+      "linkedDeckId": "deck-astral-hybrid",
+      "currentLp": "999999999999999999999",
+      "bio": "Lead tactical duelist and archivist for the Nexus Citadel. Specializes in Hybrid Crossover 6-Lane combos and extreme-scale cosmic RP encounters."
+    },
+    {
+      "id": "char-seraphina-valen",
+      "name": "Seraphina Valen",
+      "title": "Chronomancer of the Convergent Spire",
+      "avatarUrl": "",
+      "faction": "Spire Scholars / Eclipse Truce Envoy",
+      "catchphrase": "Your spell resolved three turns ago—you just haven't noticed yet.",
+      "summonChant": "Threads of mana and chain links intertwine! Unfold the Spire of the Convergent Nexus and rewrite the stack!",
+      "linkedDeckId": "deck-planeswalker-tempo",
+      "currentLp": "40000",
+      "bio": "Planeswalking tactician who bridges MTG stack precision with Yu-Gi-Oh! trap timing in cross-server Discord RP tournaments."
+    }
+  ]
+}

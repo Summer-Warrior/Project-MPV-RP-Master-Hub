@@ -1,0 +1,274 @@
+{
+  "packs": [
+    {
+      "id": "pack-nexus-ascension",
+      "name": "Nexus Core: Astral Ascension",
+      "ruleset": "Hybrid Crossover",
+      "version": "1.0.0",
+      "description": "Signature Nexus RP crossover pack utilizing 21-digit arbitrary-precision numeric code strings and dual Yu-Gi-Oh!/MTG mechanics.",
+      "sourceUrl": "registry/card-packs.json",
+      "cards": [
+        {
+          "id": "nx-astral-sovereign",
+          "codeString": "999999999999999999999",
+          "name": "Astral Cyber Dragon Sovereign",
+          "ruleset": "Hybrid Crossover",
+          "packId": "pack-nexus-ascension",
+          "imageUrl": "local://img_card_art_nexus",
+          "loreLink": "wiki-astral-citadel",
+          "abilityText": "Omni-Summon: You may deploy this card onto any Monster, Creature, or Hybrid Lane. Once per turn (Chain Speed 2): Negate a rival activation and double this unit's ATK or Power until End Phase.",
+          "attributes": {
+            "ATK": "4500",
+            "DEF": "3800",
+            "Level": "12",
+            "Mana Cost": "4UUB",
+            "Power/Toughness": "9/8",
+            "Attribute": "COSMIC",
+            "Pendulum Scale": "13"
+          }
+        },
+        {
+          "id": "nx-chrono-gate",
+          "codeString": "900000000000000042001",
+          "name": "Chrono-Weave Nexus Gate",
+          "ruleset": "Hybrid Crossover",
+          "packId": "pack-nexus-ascension",
+          "imageUrl": "local://img_hub_banner",
+          "loreLink": "wiki-nexus-convergence",
+          "abilityText": "Field / Enchantment: Players may treat Lands as Spell/Trap Zones. Once during your Main Phase, draw 1 card and gain 1000000000000 LP if you control an Astral unit.",
+          "attributes": {
+            "Card Type": "Field Spell / Enchantment",
+            "Mana Cost": "2UU",
+            "Speed": "Continuous",
+            "RP Tier": "Omega"
+          }
+        },
+        {
+          "id": "nx-aether-vanguard",
+          "codeString": "900000000000000088104",
+          "name": "Aetherial Rift Vanguard",
+          "ruleset": "Hybrid Crossover",
+          "packId": "pack-nexus-ascension",
+          "imageUrl": "local://img_avatar_duelist",
+          "loreLink": "char-kael-voss",
+          "abilityText": "Flash / Quick Effect: Deploy from hand during either player's Combat Phase. Target allied unit cannot be destroyed by battle or targeted effects this turn.",
+          "attributes": {
+            "ATK": "2600",
+            "DEF": "2200",
+            "Level": "7",
+            "Mana Cost": "2WU",
+            "Power/Toughness": "5/4",
+            "Keywords": "Flash, Ward 2"
+          }
+        },
+        {
+          "id": "nx-singularity-pulse",
+          "codeString": "777777777777777777777",
+          "name": "Singularity Overdrive Pulse",
+          "ruleset": "Hybrid Crossover",
+          "packId": "pack-nexus-ascension",
+          "imageUrl": "",
+          "loreLink": "wiki-nexus-convergence",
+          "abilityText": "Instant / Quick-Play Spell: Counter target spell or chain link on the Stack, then deal 2000 damage (or 4 loyalty damage) to target opponent or Planeswalker.",
+          "attributes": {
+            "Card Type": "Quick-Play / Instant",
+            "Mana Cost": "UUR",
+            "Chain Speed": "2",
+            "Script": "c:NegateTopStack(); c:InflictLP(2000)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pack-duelist-archive",
+      "name": "Duelist Archive: Classic Staples",
+      "ruleset": "Yu-Gi-Oh!",
+      "version": "1.0.0",
+      "description": "Classic 8-digit passcode style Yu-Gi-Oh! archetype references built for 5-Zone and Speed Duel 3-Zone testing.",
+      "sourceUrl": "registry/card-packs.json",
+      "cards": [
+        {
+          "id": "ygo-photon-drake",
+          "codeString": "89631139",
+          "name": "Azure-Eyes Plasma Dragon",
+          "ruleset": "Yu-Gi-Oh!",
+          "packId": "pack-duelist-archive",
+          "imageUrl": "local://img_card_art_nexus",
+          "loreLink": "wiki-astral-citadel",
+          "abilityText": "This legendary dragon is a powerful engine of astral destruction. Virtually invincible, very few have faced this awesome creature and lived to tell the tale.",
+          "attributes": {
+            "ATK": "3000",
+            "DEF": "2500",
+            "Level": "8",
+            "Attribute": "LIGHT",
+            "Type": "Dragon / Normal"
+          }
+        },
+        {
+          "id": "ygo-void-magician",
+          "codeString": "46986414",
+          "name": "Obsidian Rift Arcanist",
+          "ruleset": "Yu-Gi-Oh!",
+          "packId": "pack-duelist-archive",
+          "imageUrl": "",
+          "loreLink": "wiki-eclipse-syndicate",
+          "abilityText": "The ultimate spellcaster in terms of attack and dimensional defense. Gains 300 ATK for each Spell in your Graveyard during RP Turbo Duels.",
+          "attributes": {
+            "ATK": "2500",
+            "DEF": "2100",
+            "Level": "7",
+            "Attribute": "DARK",
+            "Type": "Spellcaster / Effect"
+          }
+        },
+        {
+          "id": "ygo-starlight-cyclone",
+          "codeString": "05318639",
+          "name": "Starlight Space Typhoon",
+          "ruleset": "Yu-Gi-Oh!",
+          "packId": "pack-duelist-archive",
+          "imageUrl": "",
+          "loreLink": "",
+          "abilityText": "Target 1 Spell/Trap on the field; destroy that target.",
+          "attributes": {
+            "Card Type": "Quick-Play Spell",
+            "Chain Speed": "2"
+          }
+        },
+        {
+          "id": "ygo-aegis-mirror",
+          "codeString": "44095762",
+          "name": "Aegis Mirror Barrier",
+          "ruleset": "Yu-Gi-Oh!",
+          "packId": "pack-duelist-archive",
+          "imageUrl": "",
+          "loreLink": "",
+          "abilityText": "When an opponent's monster declares an attack: Destroy all your opponent's Attack Position monsters.",
+          "attributes": {
+            "Card Type": "Normal Trap",
+            "Chain Speed": "2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pack-multiverse-sparks",
+      "name": "Multiverse Sparks: Planeswalker Set",
+      "ruleset": "Magic: The Gathering",
+      "version": "1.0.0",
+      "description": "UUID-indexed MTG-compatible custom cards with Mana Cost, Power, Toughness, and Planeswalker Loyalty attributes.",
+      "sourceUrl": "registry/card-packs.json",
+      "cards": [
+        {
+          "id": "mtg-lyra-chronomancer",
+          "codeString": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "name": "Seraphina, Architect of Lanes",
+          "ruleset": "Magic: The Gathering",
+          "packId": "pack-multiverse-sparks",
+          "imageUrl": "local://img_avatar_duelist",
+          "loreLink": "char-seraphina-valen",
+          "abilityText": "+2: Scry 2, then draw a card.\n-3: Exile target nonland permanent until Seraphina leaves the battlefield.\n-8: You get an emblem with 'Spells you cast cost 3 less and cannot be countered.'",
+          "attributes": {
+            "Mana Cost": "2WUU",
+            "Type Line": "Legendary Planeswalker — Seraphina",
+            "Loyalty": "5",
+            "Rarity": "Mythic"
+          }
+        },
+        {
+          "id": "mtg-nexus-spire-land",
+          "codeString": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+          "name": "Spire of the Convergent Nexus",
+          "ruleset": "Magic: The Gathering",
+          "packId": "pack-multiverse-sparks",
+          "imageUrl": "local://img_hub_banner",
+          "loreLink": "wiki-astral-citadel",
+          "abilityText": "Tap: Add one mana of any color. Spend this mana only to cast multi-ruleset spells or activate Nexus abilities.",
+          "attributes": {
+            "Type Line": "Legendary Land — Nexus",
+            "Mana Produced": "WUBRG",
+            "Rarity": "Rare"
+          }
+        },
+        {
+          "id": "mtg-void-sentinel",
+          "codeString": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+          "name": "Obsidian Rift Sentinel",
+          "ruleset": "Magic: The Gathering",
+          "packId": "pack-multiverse-sparks",
+          "imageUrl": "",
+          "loreLink": "wiki-eclipse-syndicate",
+          "abilityText": "Flying, Vigilance. Whenever Obsidian Rift Sentinel attacks, tap target creature defending player controls.",
+          "attributes": {
+            "Mana Cost": "3UB",
+            "Type Line": "Artifact Creature — Construct",
+            "Power": "4",
+            "Toughness": "5"
+          }
+        },
+        {
+          "id": "mtg-aether-spark-bolt",
+          "codeString": "6ec0bd7f-11c0-43da-975e-2a8ad9ebae0b",
+          "name": "Aether Spark Discharge",
+          "ruleset": "Magic: The Gathering",
+          "packId": "pack-multiverse-sparks",
+          "imageUrl": "",
+          "loreLink": "",
+          "abilityText": "Aether Spark Discharge deals 3 damage to any target. If you control a Nexus permanent, draw a card.",
+          "attributes": {
+            "Mana Cost": "R",
+            "Type Line": "Instant",
+            "Rarity": "Uncommon"
+          }
+        }
+      ]
+    }
+  ],
+  "starterDecks": [
+    {
+      "id": "deck-astral-hybrid",
+      "name": "Astral Convergence Hybrid",
+      "ruleset": "Hybrid Crossover",
+      "description": "Balanced crossover deck combining 21-digit Nexus Sovereign boss monsters with MTG instants and classic Yu-Gi-Oh! staples.",
+      "cardIds": [
+        "nx-astral-sovereign",
+        "nx-chrono-gate",
+        "nx-aether-vanguard",
+        "nx-singularity-pulse",
+        "ygo-photon-drake",
+        "ygo-starlight-cyclone",
+        "mtg-lyra-chronomancer",
+        "mtg-nexus-spire-land",
+        "mtg-aether-spark-bolt"
+      ]
+    },
+    {
+      "id": "deck-duelist-classic",
+      "name": "Duelist Archive 5-Zone",
+      "ruleset": "Yu-Gi-Oh!",
+      "description": "Streamlined Yu-Gi-Oh! test deck ready for 5-Zone and Speed Duel 3-Zone formats.",
+      "cardIds": [
+        "ygo-photon-drake",
+        "ygo-void-magician",
+        "ygo-starlight-cyclone",
+        "ygo-aegis-mirror",
+        "nx-astral-sovereign",
+        "nx-aether-vanguard"
+      ]
+    },
+    {
+      "id": "deck-planeswalker-tempo",
+      "name": "Spire Tempo Control",
+      "ruleset": "Magic: The Gathering",
+      "description": "Blue-White-Red tempo shell featuring Seraphina, Convergent Nexus lands, and stack interaction.",
+      "cardIds": [
+        "mtg-lyra-chronomancer",
+        "mtg-nexus-spire-land",
+        "mtg-void-sentinel",
+        "mtg-aether-spark-bolt",
+        "nx-singularity-pulse",
+        "nx-chrono-gate"
+      ]
+    }
+  ]
+}

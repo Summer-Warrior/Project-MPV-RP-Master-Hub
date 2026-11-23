@@ -1,0 +1,62 @@
+[
+  {
+    "id": "edopro-official",
+    "name": "ProjectIgnis EDOPro",
+    "subtitle": "Yu-Gi-Oh! Official Locked Upstream Base Client",
+    "description": "Open-source, cross-platform automated Yu-Gi-Oh! duel simulator maintained by ProjectIgnis. Links directly to the official upstream GitHub repository and releases for authentic desktop and Android builds.",
+    "type": "Official Client",
+    "platforms": ["Windows", "macOS", "Linux", "Android"],
+    "externalUrl": "https://github.com/ProjectIgnis/EDOPro",
+    "launchInApp": false,
+    "version": "Upstream Rolling",
+    "tags": ["Yu-Gi-Oh!", "Automated Engine", "Locked Upstream"]
+  },
+  {
+    "id": "card-forge-official",
+    "name": "Card-Forge Forge",
+    "subtitle": "Magic: The Gathering Official Locked Upstream Base Client",
+    "description": "Full-featured Magic: The Gathering rules engine with Adventure Mode, Draft, Commander, and AI opponents. Links honestly to the official Card-Forge upstream GitHub repository and release binaries.",
+    "type": "Official Client",
+    "platforms": ["Windows", "macOS", "Linux", "Android"],
+    "externalUrl": "https://github.com/Card-Forge/forge",
+    "launchInApp": false,
+    "version": "Upstream Snapshot",
+    "tags": ["MTG", "Rules Engine", "Locked Upstream"]
+  },
+  {
+    "id": "nexustcg-android-proto",
+    "name": "NexusTCG Android Prototype",
+    "subtitle": "Community Multi-TCG Mobile Engine Prototype",
+    "description": "Experimental Android TCG engine prototype built for custom hybrid card mechanics, rapid prototyping, and cross-franchise community playtesting.",
+    "type": "Custom Clone",
+    "platforms": ["Android"],
+    "externalUrl": "https://github.com/Summer-Warrior/Tcg-game-engine-test",
+    "launchInApp": false,
+    "version": "Prototype",
+    "tags": ["Android", "Custom Engine", "Hybrid TCG"]
+  },
+  {
+    "id": "nexus-tabletop-sandbox",
+    "name": "Nexus Tabletop Sandbox",
+    "subtitle": "Built-in Unified Multi-TCG Playable Board",
+    "description": "Runs immediately inside Nexus Master Hub with zero installation. Supports Yu-Gi-Oh! 5-Zone, Speed Duel 3-Zone, MTG Battlefield & Stack, and Hybrid Crossover 6-Lane modes with arbitrary-precision BigInt LP counters.",
+    "type": "Web Game",
+    "platforms": ["Web", "Android", "iOS", "Windows", "macOS", "Linux"],
+    "externalUrl": "",
+    "launchInApp": true,
+    "version": "Built-in v1.0",
+    "tags": ["Zero Install", "Multi-TCG", "BigInt LP"]
+  },
+  {
+    "id": "nexus-card-vault-tool",
+    "name": "Nexus Infinite Card Vault",
+    "subtitle": "Federated JSON Card Pack & BigInt ID Engine",
+    "description": "Browse, search, import federated JSON card packs from raw GitHub URLs, craft custom cards with arbitrary-length 21+ digit passcodes, and assemble cross-ruleset decks.",
+    "type": "Tool",
+    "platforms": ["Web", "Android", "iOS", "Windows", "macOS", "Linux", "Discord"],
+    "externalUrl": "",
+    "launchInApp": true,
+    "version": "Built-in v1.0",
+    "tags": ["JSON Registry", "Deck Builder", "21-Digit IDs"]
+  }
+]

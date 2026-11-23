@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Nexus Master Hub</string>
+    <string name="nav_hub">Hub</string>
+    <string name="nav_vault">Vault</string>
+    <string name="nav_tabletop">Tabletop</string>
+    <string name="nav_lore">Lore</string>
+    <string name="nav_discord">Discord</string>
+    <string name="hub_title">Nexus Master Hub</string>
+    <string name="hub_subtitle">All-Platform Multi-TCG &amp; RP Command Directory</string>
+    <string name="vault_title">Card Vault</string>
+    <string name="tabletop_title">Unified Tabletop</string>
+    <string name="lore_title">Lore &amp; Wiki</string>
+    <string name="discord_title">Discord RP &amp; Bots</string>
+    <string name="webhook_security_note">Security Note: Discord Webhooks are safe for quick in-character RP posting and are stored only in local device storage. Never paste or store Discord Bot Tokens in a client app—bot tokens belong strictly on a private backend server.</string>
+    <string name="copy_json">Copy JSON</string>
+    <string name="share_json">Export JSON</string>
+    <string name="copy_markdown">Copy Markdown</string>
+    <string name="share_markdown">Export MD</string>
+</resources>
