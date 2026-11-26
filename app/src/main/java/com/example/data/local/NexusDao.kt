@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NexusDao {
-    // Apps & Pins
+    // Apps & Pins & Discovered Satellites
     @Query("SELECT * FROM user_apps ORDER BY createdAt DESC")
     fun observeUserApps(): Flow<List<UserAppEntity>>
 
@@ -18,6 +18,12 @@ interface NexusDao {
     @Query("DELETE FROM user_apps WHERE id = :id")
     suspend fun deleteUserApp(id: String)
 
+    @Query("SELECT * FROM discovered_apps ORDER BY syncedAt DESC")
+    fun observeDiscoveredApps(): Flow<List<DiscoveredAppEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertDiscoveredApps(entities: List<DiscoveredAppEntity>)
+
     @Query("SELECT * FROM pinned_apps")
     fun observePinnedApps(): Flow<List<PinnedAppEntity>>
 
@@ -26,6 +32,28 @@ interface NexusDao {
 
     @Query("DELETE FROM pinned_apps WHERE appId = :appId")
     suspend fun unpinApp(appId: String)
+
+    // Admin Allowlist & Login Notifications
+    @Query("SELECT * FROM admin_role_bindings")
+    fun observeAdminRoleBindings(): Flow<List<AdminRoleBindingEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAdminRoleBinding(entity: AdminRoleBindingEntity)
+
+    @Query("DELETE FROM admin_role_bindings WHERE id = :id")
+    suspend fun deleteAdminRoleBinding(id: String)
+
+    @Query("SELECT * FROM login_notifications ORDER BY createdAt DESC")
+    fun observeLoginNotifications(): Flow<List<LoginNotificationEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLoginNotification(entity: LoginNotificationEntity)
+
+    @Query("UPDATE login_notifications SET isRead = 1")
+    suspend fun markAllNotificationsRead()
+
+    @Query("DELETE FROM login_notifications WHERE id = :id")
+    suspend fun deleteLoginNotification(id: String)
 
     // Card Packs & Cards & Decks
     @Query("SELECT * FROM local_card_packs ORDER BY createdAt DESC")

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project MPV RP Master Hub — Web Portal</title>
+  <style>
+    :root {
+      --bg: #0A0E17;
+      --surface: #121826;
+      --card: #1A2235;
+      --border: #2B3854;
+      --cyan: #00E5FF;
+      --gold: #FFB300;
+      --violet: #B388FF;
+      --danger: #FF5252;
+      --ok: #00E676;
+      --text: #F0F4FC;
+      --muted: #9FB0CC;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      background: linear-gradient(135deg, #101829, #18132c 60%, #0a1b2a);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .container { max-width: 1120px; margin: 0 auto; padding: 18px; }
+    .header-row {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 { margin: 0; font-size: 1.35rem; color: var(--cyan); letter-spacing: 0.4px; }
+    .sub { color: var(--muted); font-size: 0.85rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    .pill.gold { background: rgba(255, 179, 0, 0.12); color: var(--gold); border-color: rgba(255, 179, 0, 0.45); }
+    .pill.violet { background: rgba(179, 136, 255, 0.12); color: var(--violet); border-color: rgba(179, 136, 255, 0.45); }
+    .pill.danger { background: rgba(255, 82, 82, 0.14); color: var(--danger); border-color: rgba(255, 82, 82, 0.45); }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0;
+      align-items: center;
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 9px 12px;
+    }
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    button:hover { border-color: var(--cyan); }
+    button.primary { background: var(--cyan); color: #051019; border-color: var(--cyan); }
+    button.violet { background: var(--violet); color: #0A0E17; border-color: var(--violet); }
+    button.gold { background: var(--gold); color: #0A0E17; border-color: var(--gold); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(305px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card h3 { margin: 0; font-size: 1.05rem; }
+    .card p { margin: 0; font-size: 0.86rem; color: var(--muted); }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--cyan);
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Project MPV RP Master Hub</h1>
+        <div class="sub">Zero-Build GitHub Pages Portal · Direct GitHub Releases &amp; Web Router (Zero Play Store Links)</div>
+      </div>
+      <div class="badges" id="sessionBadges">
+        <span class="pill" id="osBadge">Detecting OS...</span>
+        <span class="pill violet" id="tierBadge">Tier: PUBLIC</span>
+        <button class="violet" id="authBtn">Discord + Email Sign-In</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" id="statusPanel">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;">
+        <div>
+          <strong>Satellite Registry Auto-Discovery</strong>
+          <div class="sub" id="discoveryStatus">Synced with Summer-Warrior GitHub repos (X-GitHub-Api-Version: 2026-03-10).</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="refreshGitHubBtn">Sync GitHub Repos</button>
+          <a href="https://github.com/Summer-Warrior" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+            <button type="button">GitHub Org</button>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <input id="searchInput" type="search" placeholder="Search satellite apps, types, or repos..." style="flex:1;min-width:220px;" />
+      <select id="typeFilter">
+        <option value="ALL">All Types</option>
+        <option value="TCG_TOOL">TCG_TOOL</option>
+        <option value="TCG_CLIENT">TCG_CLIENT</option>
+        <option value="LORE_WIKI">LORE_WIKI</option>
+        <option value="ASSET_VAULT">ASSET_VAULT</option>
+        <option value="ENGINE_SANDBOX">ENGINE_SANDBOX</option>
+        <option value="Official Client">Locked Upstream</option>
+      </select>
+    </div>
+
+    <div class="grid" id="appGrid"></div>
+  </main>
+
+  <!-- Case 2 Download Sheet Modal -->
+  <div class="modal-backdrop" id="downloadModal">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong id="dlTitle" style="font-size:1.05rem;">GitHub Release Download</strong>
+        <button id="dlCloseBtn">Close</button>
+      </div>
+      <div id="dlBody" class="sub"></div>
+      <div class="mono" id="dlMeta"></div>
+      <div class="actions">
+        <a id="dlDirectLink" href="#" target="_blank" rel="noopener noreferrer" style="flex:1;text-decoration:none;">
+          <button class="primary" style="width:100%;">Download from GitHub Releases</button>
+        </a>
+        <a id="dlWebFallback" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+          <button type="button">Open Web App</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discord OAuth2 + Email Role Verification Modal -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong>Discord Account-Lock &amp; Email Role Check</strong>
+        <button id="authCloseBtn">Close</button>
+      </div>
+      <p class="sub">
+        Connect your Discord OAuth2 Client ID (or Gatekeeper Worker) and any Drive-enabled email address to verify Owner or Admin tiers. Bot tokens and client secrets are never stored in this portal.
+      </p>
+      <input id="discordClientIdInput" placeholder="Discord OAuth2 Client ID (optional for live redirect)" />
+      <input id="discordHandleInput" placeholder="Discord Handle (e.g. duelist_01)" />
+      <input id="discordSnowflakeInput" placeholder="Discord Snowflake User ID" />
+      <input id="userEmailInput" type="email" placeholder="Email Address (any Drive-enabled email)" />
+      <input id="ownerWebhookInput" placeholder="Owner Alert Webhook URL (optional local-only)" />
+      <div class="actions">
+        <button class="primary" id="launchDiscordOAuthBtn" style="flex:1;">Discord OAuth2 Redirect</button>
+        <button class="violet" id="applySessionBtn" style="flex:1;">Connect Session</button>
+        <button id="signOutBtn">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const OWNER_EMAIL = "dimitriwhisenhunt@gmail.com";
+    const ADMIN_TIERS = ["OWNER", "CANON_ARCHITECT_ADMIN", "LORE_REVIEWER_ADMIN", "REPO_TECH_ADMIN"];
+    const ALLOWLISTED_ADMINS = {
+      // Owner pre-linked via AI Studio account email; additional admin emails/snowflakes can be added here
+      [OWNER_EMAIL]: "OWNER"
+    };
+
+    const PRE_REGISTERED_APPS = [
+      {
+        id: "mpv-tcg-card-maker",
+        name: "MPV TCG Card Maker",
+        type: "TCG_TOOL",
+        repoOwner: "Summer-Warrior",
+        repoName: "MPV-TCG-Card-Making-Software-Updated",
+        deepLinkScheme: "nexus-mpv-card-maker://open",
+        webUrl: "https://summer-warrior.github.io/MPV-TCG-Card-Making-Software-Updated/",
+        externalUrl: "https://github.com/Summer-Warrior/MPV-TCG-Card-Making-Software-Updated",
+        description: "Multi-TCG custom card design software with 20-color pie and JSON pack exports.",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-tcg-engine-test",
+        name: "NexusTCG Engine Client",
+        type: "TCG_CLIENT",
+        repoOwner: "Summer-Warrior",
+        repoName: "Tcg-game-engine-test",
+        deepLinkScheme: "nexus-tcg-engine://open",
+        webUrl: "https://summer-warrior.github.io/Tcg-game-engine-test/",
+        externalUrl: "https://github.com/Summer-Warrior/Tcg-game-engine-test",
+        description: "Multi-TCG client prototype for Flagship Ultimate TCG (WIP) and hybrid playtesting.",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-lore-keeper",
+        name: "MPV Lore Keeping App",
+        type: "LORE_WIKI",
+        repoOwner: "Summer-Warrior",
+        repoName: "Lore-Keeping-app",
+        deepLinkScheme: "nexus-lore-keeper://open",
+        webUrl: "https://summer-warrior.github.io/Lore-Keeping-app/",
+        externalUrl: "https://github.com/Summer-Warrior/Lore-Keeping-app",
+        description: "Canon RP lore archive and Avatar/Memorial Forge dossiers (Filters 19-21).",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-asset-vault",
+        name: "MPV Asset Holding Software",
+        type: "ASSET_VAULT",
+        repoOwner: "Summer-Warrior",
+        repoName: "Asset-Holding-Software",
+        deepLinkScheme: "nexus-asset-vault://open",
+        webUrl: "https://summer-warrior.github.io/Asset-Holding-Software/",
+        externalUrl: "https://github.com/Summer-Warrior/Asset-Holding-Software",
+        description: "Asset holding vault for card art, frames, sprites, and federated pack bundles.",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-test-engine",
+        name: "MPV Test Engine (Core)",
+        type: "ENGINE_SANDBOX",
+        repoOwner: "Summer-Warrior",
+        repoName: "Test-engine",
+        deepLinkScheme: "nexus-test-engine://open",
+        webUrl: "https://summer-warrior.github.io/Test-engine/",
+        externalUrl: "https://github.com/Summer-Warrior/Test-engine",
+        description: "Owner-only rules sandbox for Flagship Ultimate TCG experiments.",
+        accessTier: "OWNER_ONLY",
+        hiddenFromUnauthorized: false,
+        allowedTiers: ["OWNER"],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-test-engine-1",
+        name: "MPV Test Engine 1",
+        type: "ENGINE_SANDBOX",
+        repoOwner: "Summer-Warrior",
+        repoName: "Test-Engine-1",
+        deepLinkScheme: "nexus-test-engine-1://open",
+        webUrl: "https://summer-warrior.github.io/Test-Engine-1/",
+        externalUrl: "https://github.com/Summer-Warrior/Test-Engine-1",
+        description: "Owner-only iteration 1 match flow sandbox.",
+        accessTier: "OWNER_ONLY",
+        hiddenFromUnauthorized: false,
+        allowedTiers: ["OWNER"],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-test-engine-2",
+        name: "MPV Test Engine 2",
+        type: "ENGINE_SANDBOX",
+        repoOwner: "Summer-Warrior",
+        repoName: "Test-Engine-2",
+        deepLinkScheme: "nexus-test-engine-2://open",
+        webUrl: "https://summer-warrior.github.io/Test-Engine-2/",
+        externalUrl: "https://github.com/Summer-Warrior/Test-Engine-2",
+        description: "Owner-only iteration 2 combat & stack sandbox.",
+        accessTier: "OWNER_ONLY",
+        hiddenFromUnauthorized: false,
+        allowedTiers: ["OWNER"],
+        lockedUpstream: false
+      },
+      {
+        id: "mpv-notebook-source-auditor",
+        name: "MPV Notebook Source Auditor",
+        type: "ADMIN_AUDITOR",
+        repoOwner: "Summer-Warrior",
+        repoName: "MPV-Notebook-Source-Auditor",
+        deepLinkScheme: "nexus-source-auditor://open",
+        webUrl: "https://summer-warrior.github.io/MPV-Notebook-Source-Auditor/",
+        externalUrl: "https://github.com/Summer-Warrior/MPV-Notebook-Source-Auditor",
+        description: "Stealth Admin Google Drive & Canon Source Auditor with verified Discord session handoff.",
+        accessTier: "ADMIN_TIER",
+        hiddenFromUnauthorized: true,
+        allowedTiers: ADMIN_TIERS,
+        lockedUpstream: false
+      },
+      {
+        id: "edopro-official",
+        name: "ProjectIgnis EDOPro",
+        type: "Official Client",
+        repoOwner: "ProjectIgnis",
+        repoName: "EDOPro",
+        deepLinkScheme: "",
+        webUrl: "https://github.com/ProjectIgnis/EDOPro",
+        externalUrl: "https://github.com/ProjectIgnis/EDOPro",
+        description: "LOCKED TO UPSTREAM GITHUB SOURCE (Base Rules Immutable). External GitHub repository link only.",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: true
+      },
+      {
+        id: "card-forge-official",
+        name: "Card-Forge Forge",
+        type: "Official Client",
+        repoOwner: "Card-Forge",
+        repoName: "forge",
+        deepLinkScheme: "",
+        webUrl: "https://github.com/Card-Forge/forge",
+        externalUrl: "https://github.com/Card-Forge/forge",
+        description: "LOCKED TO UPSTREAM GITHUB SOURCE (Base Rules Immutable). External GitHub repository link only.",
+        accessTier: "PUBLIC",
+        hiddenFromUnauthorized: false,
+        allowedTiers: [],
+        lockedUpstream: true
+      }
+    ];
+
+    let allApps = [...PRE_REGISTERED_APPS];
+    let session = JSON.parse(localStorage.getItem("mpv_hub_session") || "null") || {
+      signedIn: false,
+      handle: "",
+      snowflakeId: "",
+      email: "",
+      tier: "PUBLIC"
+    };
+
+    function detectPlatform() {
+      const ua = navigator.userAgent || "";
+      if (/Android/i.test(ua)) return { os: "Android", installable: true, exts: [".apk"] };
+      if (/iPhone|iPad|iPod/i.test(ua)) return { os: "iOS", installable: false, exts: [] };
+      if (/CrOS/i.test(ua)) return { os: "Chromebook", installable: false, exts: [] };
+      if (/Windows/i.test(ua)) return { os: "Windows", installable: true, exts: [".exe", ".msi"] };
+      if (/Macintosh|Mac OS X/i.test(ua)) return { os: "macOS", installable: true, exts: [".dmg"] };
+      if (/Linux/i.test(ua)) return { os: "Linux", installable: true, exts: [".AppImage", ".deb"] };
+      return { os: "Web", installable: false, exts: [] };
+    }
+
+    const platformInfo = detectPlatform();
+    document.getElementById("osBadge").textContent = "OS: " + platformInfo.os;
+
+    // STRICT STEALTH HIDING RULE: hiddenFromUnauthorized apps are stripped completely
+    function isAppVisible(app) {
+      if (!app.hiddenFromUnauthorized) return true;
+      return session.signedIn && app.allowedTiers.includes(session.tier);
+    }
+
+    function isAuthorizedToLaunch(app) {
+      if (app.accessTier === "PUBLIC") return true;
+      if (app.accessTier === "DISCORD_SIGNED_IN") return session.signedIn;
+      if (app.accessTier === "OWNER_ONLY") return session.tier === "OWNER";
+      if (app.accessTier === "ADMIN_TIER") return app.allowedTiers.includes(session.tier);
+      return false;
+    }
+
+    function buildAuditorHandoffUrl(baseUrl) {
+      const url = new URL(baseUrl);
+      url.searchParams.set("handoff_source", "nexus-master-hub-web");
+      url.searchParams.set("discord_id", session.snowflakeId || "");
+      url.searchParams.set("discord_handle", session.handle || "");
+      url.searchParams.set("role_tier", session.tier || "PUBLIC");
+      url.searchParams.set("verified_email", session.email || "");
+      url.searchParams.set("drive_any_email", "true");
+      url.searchParams.set("notebook_access", "direct");
+      return url.toString();
+    }
+
+    // 3-Case Launch & Download Router (never routes to Google Play Store)
+    async function routeAppAction(app) {
+      if (!isAuthorizedToLaunch(app)) {
+        document.getElementById("authModal").classList.add("open");
+        return;
+      }
+      if (app.lockedUpstream) {
+        window.open(app.externalUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      const targetWebUrl = app.id === "mpv-notebook-source-auditor"
+        ? buildAuditorHandoffUrl(app.webUrl)
+        : app.webUrl;
+
+      // Case 3: Browser-only platform (iOS, Chromebook, Web, Discord)
+      if (!platformInfo.installable || !app.repoOwner || !app.repoName) {
+        window.open(targetWebUrl || app.externalUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      // Case 1 attempt on installable OS + Case 2 GitHub Release binary lookup
+      try {
+        const res = await fetch(`https://api.github.com/repos/${app.repoOwner}/${app.repoName}/releases/latest`, {
+          headers: { "X-GitHub-Api-Version": "2026-03-10", "Accept": "application/vnd.github+json" }
+        });
+        if (res.ok) {
+          const release = await res.json();
+          const matchingAsset = (release.assets || []).find(a =>
+            platformInfo.exts.some(ext => a.name.toLowerCase().endsWith(ext.toLowerCase()))
+          );
+          if (matchingAsset) {
+            document.getElementById("dlTitle").textContent = `${app.name} — ${release.tag_name || "Latest"}`;
+            document.getElementById("dlBody").textContent =
+              `Direct GitHub Release binary detected for ${platformInfo.os}. Public downloads always come from GitHub Releases (never Google Play Store).`;
+            const mb = (matchingAsset.size / (1024 * 1024)).toFixed(2);
+            document.getElementById("dlMeta").textContent = `${matchingAsset.name} · ${mb} MB`;
+            document.getElementById("dlDirectLink").href = matchingAsset.browser_download_url;
+            document.getElementById("dlWebFallback").href = targetWebUrl || app.externalUrl;
+            document.getElementById("downloadModal").classList.add("open");
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Release check fallback to web:", err);
+      }
+
+      // Case 3 fallback when no native binary exists for current OS
+      window.open(targetWebUrl || app.externalUrl, "_blank", "noopener,noreferrer");
+    }
+
+    async function syncGitHubRepos() {
+      const statusEl = document.getElementById("discoveryStatus");
+      statusEl.textContent = "Querying GitHub REST API (X-GitHub-Api-Version: 2026-03-10)...";
+      try {
+        const res = await fetch("https://api.github.com/users/Summer-Warrior/repos?sort=updated&per_page=100", {
+          headers: { "X-GitHub-Api-Version": "2026-03-10", "Accept": "application/vnd.github+json" }
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const repos = await res.json();
+        const existingNames = new Set(allApps.map(a => (a.repoName || "").toLowerCase()));
+        let discovered = 0;
+        for (const repo of repos) {
+          if (existingNames.has((repo.name || "").toLowerCase())) continue;
+          try {
+            const manifestRes = await fetch(`https://raw.githubusercontent.com/Summer-Warrior/${repo.name}/${repo.default_branch || "main"}/nexus-app.json`);
+            if (manifestRes.ok) {
+              const m = await manifestRes.json();
+              allApps.push({
+                id: m.id || repo.name.toLowerCase(),
+                name: m.name || repo.name,
+                type: m.type || "TCG_TOOL",
+                repoOwner: "Summer-Warrior",
+                repoName: repo.name,
+                deepLinkScheme: m.deepLinkScheme || "",
+                webUrl: m.webUrl || `https://summer-warrior.github.io/${repo.name}/`,
+                externalUrl: repo.html_url,
+                description: m.description || repo.description || "Auto-discovered satellite manifest.",
+                accessTier: m.accessTier || "PUBLIC",
+                hiddenFromUnauthorized: Boolean(m.hiddenFromUnauthorized),
+                allowedTiers: Array.isArray(m.allowedTiers) ? m.allowedTiers : [],
+                lockedUpstream: false
+              });
+              discovered++;
+            }
+          } catch (manifestErr) {
+            console.debug("No nexus-app.json on", repo.name, manifestErr);
+          }
+        }
+        statusEl.textContent = `Synced ${repos.length} Summer-Warrior repos (${discovered} extra manifests discovered).`;
+        renderApps();
+      } catch (e) {
+        statusEl.textContent = "Showing pre-registered satellite catalog (GitHub API rate limit or offline).";
+      }
+    }
+
+    function renderApps() {
+      const grid = document.getElementById("appGrid");
+      const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      const typeFilter = document.getElementById("typeFilter").value;
+      document.getElementById("tierBadge").textContent = "Tier: " + session.tier;
+
+      const visible = allApps.filter(app => {
+        if (!isAppVisible(app)) return false;
+        const typeOk = typeFilter === "ALL" || app.type === typeFilter;
+        const qOk = !query ||
+          app.name.toLowerCase().includes(query) ||
+          app.type.toLowerCase().includes(query) ||
+          (app.description || "").toLowerCase().includes(query);
+        return typeOk && qOk;
+      });
+
+      grid.innerHTML = "";
+      for (const app of visible) {
+        const card = document.createElement("article");
+        card.className = "card";
+        const authorized = isAuthorizedToLaunch(app);
+        const badges = document.createElement("div");
+        badges.className = "badges";
+        badges.innerHTML = `<span class="pill">${app.type}</span>` +
+          (app.lockedUpstream ? `<span class="pill gold">LOCKED TO UPSTREAM GITHUB SOURCE (Base Rules Immutable)</span>` : "") +
+          (app.accessTier === "OWNER_ONLY" ? `<span class="pill danger">OWNER_ONLY</span>` : "") +
+          (app.hiddenFromUnauthorized ? `<span class="pill violet">STEALTH ADMIN</span>` : "");
+
+        const title = document.createElement("h3");
+        title.textContent = app.name;
+        const desc = document.createElement("p");
+        desc.textContent = app.description;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const launchBtn = document.createElement("button");
+        launchBtn.className = authorized ? "primary" : "gold";
+        launchBtn.textContent = app.lockedUpstream
+          ? "Open Upstream GitHub"
+          : (authorized ? (platformInfo.installable ? "Launch / GitHub Release" : "Launch Web App") : "Sign In Required");
+        launchBtn.onclick = () => routeAppAction(app);
+        actions.appendChild(launchBtn);
+
+        if (app.deepLinkScheme && authorized && platformInfo.installable) {
+          const dlLink = document.createElement("button");
+          dlLink.textContent = "Open Installed";
+          dlLink.onclick = () => {
+            window.location.href = app.id === "mpv-notebook-source-auditor"
+              ? buildAuditorHandoffUrl(app.deepLinkScheme)
+              : app.deepLinkScheme;
+          };
+          actions.appendChild(dlLink);
+        }
+
+        card.append(badges, title, desc, actions);
+        grid.appendChild(card);
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderApps);
+    document.getElementById("typeFilter").addEventListener("change", renderApps);
+    document.getElementById("refreshGitHubBtn").addEventListener("click", syncGitHubRepos);
+    document.getElementById("dlCloseBtn").addEventListener("click", () => {
+      document.getElementById("downloadModal").classList.remove("open");
+    });
+    document.getElementById("authBtn").addEventListener("click", () => {
+      document.getElementById("authModal").classList.add("open");
+    });
+    document.getElementById("authCloseBtn").addEventListener("click", () => {
+      document.getElementById("authModal").classList.remove("open");
+    });
+    document.getElementById("launchDiscordOAuthBtn").addEventListener("click", () => {
+      const clientId = (document.getElementById("discordClientIdInput").value || "").trim();
+      if (!clientId) {
+        alert("Enter your Discord Application Client ID to start live Discord OAuth2 redirect, or use Connect Session below.");
+        return;
+      }
+      const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+      window.location.href = `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&response_type=token&scope=identify%20email&redirect_uri=${redirectUri}`;
+    });
+    document.getElementById("applySessionBtn").addEventListener("click", async () => {
+      const handle = (document.getElementById("discordHandleInput").value || "").trim();
+      const snowflakeId = (document.getElementById("discordSnowflakeInput").value || "").trim();
+      const email = (document.getElementById("userEmailInput").value || "").trim().toLowerCase();
+      const webhook = (document.getElementById("ownerWebhookInput").value || "").trim();
+      if (!handle || !email) {
+        alert("Enter both your Discord handle and email address.");
+        return;
+      }
+      const tier = ALLOWLISTED_ADMINS[email] || "DISCORD_SIGNED_IN";
+      session = { signedIn: true, handle, snowflakeId, email, tier };
+      localStorage.setItem("mpv_hub_session", JSON.stringify(session));
+      if (webhook.startsWith("https://discord.com/api/webhooks/")) {
+        try {
+          await fetch(webhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: "Nexus Master Hub Security",
+              embeds: [{
+                title: "New Web Portal Login Alert",
+                description: `**User:** ${handle}\n**Email:** ${email}\n**Role Tier:** ${tier}`,
+                color: 0x00E5FF
+              }]
+            })
+          });
+        } catch (err) {
+          console.warn("Webhook alert failed:", err);
+        }
+      }
+      document.getElementById("authModal").classList.remove("open");
+      renderApps();
+    });
+    document.getElementById("signOutBtn").addEventListener("click", () => {
+      session = { signedIn: false, handle: "", snowflakeId: "", email: "", tier: "PUBLIC" };
+      localStorage.removeItem("mpv_hub_session");
+      document.getElementById("authModal").classList.remove("open");
+      renderApps();
+    });
+
+    renderApps();
+  </script>
+</body>
+</html>

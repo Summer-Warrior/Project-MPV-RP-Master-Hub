@@ -88,8 +88,18 @@ import com.example.ui.theme.NexusTextPrimary
 import com.example.ui.theme.NexusTextSecondary
 import com.example.ui.theme.NexusViolet
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
+import com.example.data.model.ChatChannelType
+import com.example.data.model.NEXUS_20_COLOR_PIE
+import com.example.data.model.StandardTurnFlowFlag
+import com.example.data.model.TabletopRuleEngineMode
+
 /**
- * ONE single unified interactive Tabletop board backed by ONE single state store.
+ * ONE single unified playmat-first Tabletop board backed by ONE single state store.
+ * Preserves Notebook TCG guardrails: Flagship Ultimate TCG (WIP) separate from AI/Hybrid Combo Mixer,
+ * 20-Color Pie starting with 0 default colors, End Turn / Extra Turn only (zero time-travel flags),
+ * and strict separation between IC Chat, OOC Normal, and OOC Ruling-Call logs.
  */
 @Composable
 fun TabletopScreen(
@@ -98,10 +108,14 @@ fun TabletopScreen(
 ) {
     val state by viewModel.tabletopState.collectAsStateWithLifecycle()
     val decks by viewModel.decks.collectAsStateWithLifecycle()
+    val chatMessages by viewModel.chatMessages.collectAsStateWithLifecycle()
 
     var showDeckPicker by remember { mutableStateOf(false) }
     var showBigIntEditor by remember { mutableStateOf(false) }
     var showAddStackDialog by remember { mutableStateOf(false) }
+    var showColorPie by remember { mutableStateOf(false) }
+    var activeChatChannel by remember { mutableStateOf(ChatChannelType.IC_CHAT) }
+    var chatInput by remember { mutableStateOf("") }
 
     val frontZones = remember(state.zones) { state.zones.filter { it.rowGroup == "FRONT" } }
     val backZones = remember(state.zones) { state.zones.filter { it.rowGroup == "BACK" } }
@@ -117,7 +131,7 @@ fun TabletopScreen(
         contentPadding = PaddingValues(14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 1. Header + Unified Board Layout Mode Selector
+        // 1. Header + Separate Ruleset Track (Flagship Ultimate TCG WIP vs AI/Hybrid Combo Mixer) + Board Layout Selector
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
@@ -127,12 +141,12 @@ fun TabletopScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Unified Tabletop",
+                            text = "Unified Playmat",
                             style = MaterialTheme.typography.headlineSmall,
                             color = NexusTextPrimary
                         )
                         Text(
-                            text = "Active Deck: ${state.activeDeckName}",
+                            text = "${state.engineMode.label} · Deck: ${state.activeDeckName}",
                             style = MaterialTheme.typography.labelSmall,
                             color = NexusCyan,
                             maxLines = 1,
@@ -158,7 +172,7 @@ fun TabletopScreen(
                                     DiscordBroadcastDraft(
                                         username = "Nexus Tabletop Relay",
                                         title = "Duel Telemetry — Turn ${state.turnNumber} (${state.currentPhase.label})",
-                                        body = "Mode: **${state.layoutMode.label}**\nDeck: **${state.activeDeckName}**\nLatest Action: ${state.eventLog.firstOrNull()?.message ?: "Board ready."}",
+                                        body = "Track: **${state.engineMode.label}**\nBoard: **${state.layoutMode.label}**\nTurn Flag: **${state.activeTurnFlowFlag.label}**\nLatest Action: ${state.eventLog.firstOrNull()?.message ?: "Board ready."}",
                                         accentHex = 0x00E5FF,
                                         fields = listOf(
                                             "Life Points" to BigIntMath.formatWithCommas(state.lifePoints),
@@ -180,7 +194,37 @@ fun TabletopScreen(
                     }
                 }
 
-                // Board Layout Selector
+                // Separate Flagship Ultimate TCG (WIP) vs AI/Hybrid Combo Mixer selector
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TabletopRuleEngineMode.entries.forEach { mode ->
+                        val selected = state.engineMode == mode
+                        FilterChip(
+                            selected = selected,
+                            onClick = { viewModel.setTabletopEngineMode(mode) },
+                            label = { Text(mode.label, style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.testTag("engine_track_${mode.name.lowercase()}"),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = NexusViolet.copy(alpha = 0.22f),
+                                selectedLabelColor = NexusViolet,
+                                containerColor = NexusSurface,
+                                labelColor = NexusTextSecondary
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = selected,
+                                borderColor = NexusBorder,
+                                selectedBorderColor = NexusViolet
+                            )
+                        )
+                    }
+                }
+
+                // Board Layout Selector + 20-Color Pie toggle + Standard Turn-Flow Flags (End Turn / Extra Turn ONLY)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -205,6 +249,83 @@ fun TabletopScreen(
                                 selected = selected,
                                 borderColor = NexusBorder,
                                 selectedBorderColor = NexusCyan
+                            )
+                        )
+                    }
+                    FilterChip(
+                        selected = showColorPie,
+                        onClick = { showColorPie = !showColorPie },
+                        label = { Text("20-Color Pie (${state.selectedPieColors.size})", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.testTag("toggle_20_color_pie")
+                    )
+                }
+
+                // Collapsible 20-Color Pie (starts with 0 default colors selected!)
+                AnimatedVisibility(visible = showColorPie) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = NexusSurface,
+                        border = BorderStroke(1.dp, NexusBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "20-COLOR PIE (${state.selectedPieColors.size}/20 selected · 0 default)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = NexusGold
+                                )
+                                if (state.selectedPieColors.isNotEmpty()) {
+                                    TextButton(onClick = { viewModel.clearPieColors() }, contentPadding = PaddingValues(0.dp)) {
+                                        Text("Clear", style = MaterialTheme.typography.labelSmall, color = NexusTextMuted)
+                                    }
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                NEXUS_20_COLOR_PIE.forEach { (colorName, hex) ->
+                                    val selected = colorName in state.selectedPieColors
+                                    FilterChip(
+                                        selected = selected,
+                                        onClick = { viewModel.togglePieColor(colorName) },
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(10.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(hex))
+                                            )
+                                        },
+                                        label = { Text(colorName, style = MaterialTheme.typography.labelSmall) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Standard Match Turn-Flow Guardrail: ONLY End Turn and Extra Turn allowed (zero time-travel flags)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("MATCH FLAG:", style = MaterialTheme.typography.labelSmall, color = NexusTextMuted)
+                    StandardTurnFlowFlag.entries.forEach { flag ->
+                        val active = state.activeTurnFlowFlag == flag
+                        FilterChip(
+                            selected = active,
+                            onClick = { viewModel.setTurnFlowFlag(flag) },
+                            label = { Text(flag.label, style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = NexusGold.copy(alpha = 0.22f),
+                                selectedLabelColor = NexusGold
                             )
                         )
                     }
@@ -766,6 +887,151 @@ fun TabletopScreen(
                                     color = NexusTextSecondary
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 8. Strictly Separated IC Chat / OOC Normal / OOC Ruling-Call Logs
+        item {
+            val channelAccent = when (activeChatChannel) {
+                ChatChannelType.IC_CHAT -> NexusCyan
+                ChatChannelType.OOC_NORMAL -> NexusViolet
+                ChatChannelType.OOC_RULING_CALL -> NexusGold
+            }
+            val channelMessages = remember(chatMessages, activeChatChannel) {
+                chatMessages.filter { it.channel == activeChatChannel }
+            }
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = NexusCard,
+                border = BorderStroke(1.dp, channelAccent.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("separated_chat_panel")
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "SEPARATED MATCH CHANNELS",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = channelAccent
+                        )
+                        NexusPillBadge(
+                            text = activeChatChannel.label,
+                            accentColor = channelAccent
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        ChatChannelType.entries.forEach { channel ->
+                            val chipAccent = when (channel) {
+                                ChatChannelType.IC_CHAT -> NexusCyan
+                                ChatChannelType.OOC_NORMAL -> NexusViolet
+                                ChatChannelType.OOC_RULING_CALL -> NexusGold
+                            }
+                            FilterChip(
+                                selected = activeChatChannel == channel,
+                                onClick = { activeChatChannel = channel },
+                                label = { Text(channel.label, style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = chipAccent.copy(alpha = 0.18f),
+                                    selectedLabelColor = chipAccent
+                                ),
+                                modifier = Modifier.testTag("chat_channel_${channel.name.lowercase()}")
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = NexusSurface,
+                        border = BorderStroke(1.dp, NexusBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            if (channelMessages.isEmpty()) {
+                                Text(
+                                    text = "No messages in ${activeChatChannel.label} yet. Logs stay strictly isolated from other channels.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = NexusTextMuted
+                                )
+                            } else {
+                                channelMessages.takeLast(8).forEach { msg ->
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = "${msg.senderName} · ${msg.channel.shortTag} · ${msg.timestampLabel}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = channelAccent
+                                        )
+                                        Text(
+                                            text = msg.body,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = NexusTextPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = chatInput,
+                            onValueChange = { chatInput = it },
+                            placeholder = {
+                                Text(
+                                    text = when (activeChatChannel) {
+                                        ChatChannelType.IC_CHAT -> "Speak in-character..."
+                                        ChatChannelType.OOC_NORMAL -> "Post OOC banter..."
+                                        ChatChannelType.OOC_RULING_CALL -> "Log a formal ruling call..."
+                                    },
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            },
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("chat_channel_input")
+                        )
+                        Button(
+                            onClick = {
+                                if (chatInput.isNotBlank()) {
+                                    viewModel.postChatMessage(activeChatChannel, chatInput)
+                                    chatInput = ""
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = channelAccent,
+                                contentColor = NexusBackground
+                            ),
+                            modifier = Modifier.testTag("chat_channel_send_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send to ${activeChatChannel.label}",
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }

@@ -11,17 +11,71 @@ data class UserAppEntity(
     val description: String,
     val type: String,
     val platformsJson: String,
+    val repoOwner: String = "",
+    val repoName: String = "",
+    val deepLinkScheme: String = "",
+    val androidPackageName: String = "",
+    val webUrl: String = "",
     val externalUrl: String,
     val launchInApp: Boolean,
+    val accessTier: String = "PUBLIC",
+    val hiddenFromUnauthorized: Boolean = false,
+    val allowedTiersJson: String = "[]",
+    val lockedUpstream: Boolean = false,
     val version: String,
     val tagsJson: String,
     val createdAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "discovered_apps")
+data class DiscoveredAppEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val subtitle: String,
+    val description: String,
+    val type: String,
+    val platformsJson: String,
+    val repoOwner: String,
+    val repoName: String,
+    val deepLinkScheme: String,
+    val androidPackageName: String,
+    val webUrl: String,
+    val externalUrl: String,
+    val accessTier: String,
+    val hiddenFromUnauthorized: Boolean,
+    val allowedTiersJson: String,
+    val version: String,
+    val tagsJson: String,
+    val syncedAt: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "pinned_apps")
 data class PinnedAppEntity(
     @PrimaryKey val appId: String,
     val pinnedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "admin_role_bindings")
+data class AdminRoleBindingEntity(
+    @PrimaryKey val id: String,
+    val identifier: String,
+    val identifierType: String,
+    val assignedTier: String,
+    val label: String
+)
+
+@Entity(tableName = "login_notifications")
+data class LoginNotificationEntity(
+    @PrimaryKey val id: String,
+    val discordHandle: String,
+    val discordUserId: String,
+    val email: String,
+    val resolvedTier: String,
+    val timestampLabel: String,
+    val discordAlertStatus: String,
+    val emailAlertStatus: String,
+    val isRead: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 @Entity(tableName = "local_card_packs")
@@ -82,7 +136,8 @@ data class RpCharacterEntity(
     val summonChant: String,
     val linkedDeckId: String,
     val currentLp: String,
-    val bio: String
+    val bio: String,
+    val memorialFiltersJson: String = "[]"
 )
 
 @Entity(tableName = "local_discord_resources")

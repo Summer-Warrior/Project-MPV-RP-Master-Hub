@@ -1,0 +1,51 @@
+name: Auto Release Master Hub APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Stage branded APK artifact
+        run: |
+          mkdir -p release-artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/Project-MPV-RP-Master-Hub-latest.apk
+
+      - name: Publish latest GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: latest
+          name: Project MPV RP Master Hub (Latest Build)
+          body: |
+            Automated build from `main` branch.
+            - Direct GitHub Release APK distribution (no Google Play Store link required for public users).
+            - Includes Satellite Ecosystem auto-discovery, 3-case launcher, Discord OAuth2 + PKCE tier lock, and zero-build web portal (`docs/index.html`).
+          files: |
+            release-artifacts/Project-MPV-RP-Master-Hub-latest.apk
+          make_latest: true
+          draft: false
+          prerelease: false

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,6 +62,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.AVATAR_MEMORIAL_FILTERS_19_21
 import com.example.data.model.CardEntry
 import com.example.data.model.DeckEntry
 import com.example.data.model.RpCharacter
@@ -524,6 +527,17 @@ private fun RpCharacterCard(
                 )
             }
 
+            if (character.memorialFilters.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    character.memorialFilters.forEach { f ->
+                        NexusPillBadge(text = f, accentColor = NexusGold)
+                    }
+                }
+            }
+
             if (character.summonChant.isNotBlank()) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
@@ -687,6 +701,7 @@ private fun CreateCharacterDialog(
     var summonChant by remember { mutableStateOf("") }
     var currentLp by remember { mutableStateOf("8000") }
     var linkedDeckId by remember { mutableStateOf(decks.firstOrNull()?.id ?: "") }
+    val selectedMemorialFilters = remember { mutableStateListOf<String>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -746,6 +761,40 @@ private fun CreateCharacterDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Text(
+                    text = "Avatar / Memorial Forge Filters 19-21 (Dossiers Only)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = NexusGold
+                )
+                AVATAR_MEMORIAL_FILTERS_19_21.forEach { filterLabel ->
+                    val checked = filterLabel in selectedMemorialFilters
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (checked) selectedMemorialFilters.remove(filterLabel)
+                                else selectedMemorialFilters.add(filterLabel)
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked && filterLabel !in selectedMemorialFilters) {
+                                    selectedMemorialFilters.add(filterLabel)
+                                } else if (!isChecked) {
+                                    selectedMemorialFilters.remove(filterLabel)
+                                }
+                            }
+                        )
+                        Text(
+                            text = filterLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = NexusTextPrimary
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -767,6 +816,7 @@ private fun CreateCharacterDialog(
                                 BigIntMath.parseOrZero(currentLp).toString()
                             } else "8000",
                             bio = "",
+                            memorialFilters = selectedMemorialFilters.toList(),
                             isUserCreated = true
                         )
                     )

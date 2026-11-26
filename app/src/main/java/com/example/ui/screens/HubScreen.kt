@@ -24,12 +24,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
@@ -50,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -61,19 +67,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
+import com.example.data.model.AccessTier
 import com.example.data.model.AppEntry
 import com.example.data.util.JsonExportUtil
 import com.example.ui.NexusViewModel
 import com.example.ui.components.JsonExportActionRow
 import com.example.ui.components.NexusEmptyStateCard
 import com.example.ui.components.NexusPillBadge
-import com.example.ui.components.openSafeExternalUrl
 import com.example.ui.theme.NexusBackground
 import com.example.ui.theme.NexusBorder
 import com.example.ui.theme.NexusCard
 import com.example.ui.theme.NexusCyan
 import com.example.ui.theme.NexusDanger
 import com.example.ui.theme.NexusGold
+import com.example.ui.theme.NexusSuccess
 import com.example.ui.theme.NexusSurface
 import com.example.ui.theme.NexusTextMuted
 import com.example.ui.theme.NexusTextPrimary
@@ -81,23 +88,32 @@ import com.example.ui.theme.NexusTextSecondary
 import com.example.ui.theme.NexusViolet
 import java.util.UUID
 
-private val PLATFORM_FILTERS = listOf("All", "Web", "Android", "iOS", "Windows", "macOS", "Linux", "Discord")
-private val TYPE_FILTERS = listOf("All", "Official Client", "Custom Clone", "Web Game", "Tool")
+private val PLATFORM_FILTERS = listOf("All", "Android", "Web", "iOS", "Windows", "macOS", "Linux", "Discord")
+private val TYPE_FILTERS = listOf(
+    "All", "TCG_TOOL", "TCG_CLIENT", "LORE_WIKI", "ASSET_VAULT", "ENGINE_SANDBOX", "RUNTIME", "STORE", "ANIMATION", "Official Client", "Web Game"
+)
 
 @Composable
 fun HubScreen(
     viewModel: NexusViewModel,
     modifier: Modifier = Modifier
 ) {
-    val apps by viewModel.apps.collectAsStateWithLifecycle()
+    // STRICT STEALTH HIDING: visibleApps already strips hiddenFromUnauthorized apps before reaching UI
+    val apps by viewModel.visibleApps.collectAsStateWithLifecycle()
     val cards by viewModel.cards.collectAsStateWithLifecycle()
     val articles by viewModel.wikiArticles.collectAsStateWithLifecycle()
+    val effectiveTier by viewModel.effectiveTier.collectAsStateWithLifecycle()
+    val session by viewModel.authSession.collectAsStateWithLifecycle()
+    val previewOverride by viewModel.previewOverrideTier.collectAsStateWithLifecycle()
+    val notifications by viewModel.loginNotifications.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var selectedPlatform by remember { mutableStateOf("All") }
     var selectedType by remember { mutableStateOf("All") }
     var showAddAppDialog by remember { mutableStateOf(false) }
     var exportingApp by remember { mutableStateOf<AppEntry?>(null) }
+
+    val unreadAlerts = remember(notifications) { notifications.count { !it.isRead } }
 
     val filteredApps = remember(apps, selectedPlatform, selectedType) {
         apps.filter { app ->
@@ -116,6 +132,92 @@ fun HubScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // Account, Sync, Notifications & Stealth Admin Bar
+        item {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = NexusSurface,
+                border = BorderStroke(1.dp, NexusBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.openAuthDialog() },
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            border = BorderStroke(1.dp, if (session.isSignedIn) NexusCyan else NexusViolet),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = if (session.isSignedIn) NexusCyan else NexusViolet
+                            ),
+                            modifier = Modifier.testTag("hub_auth_button")
+                        ) {
+                            Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = if (session.isSignedIn) effectiveTier.name else "Sign In",
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        if (previewOverride != null) {
+                            NexusPillBadge(text = "PREVIEW", accentColor = NexusGold)
+                        }
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { viewModel.syncSatelliteRepos() },
+                            modifier = Modifier.testTag("hub_sync_github_button")
+                        ) {
+                            Icon(Icons.Default.CloudSync, contentDescription = "Sync Summer-Warrior GitHub repos", tint = NexusCyan)
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.openNotificationsDialog() },
+                            modifier = Modifier.testTag("hub_notifications_button")
+                        ) {
+                            BadgedBox(
+                                badge = {
+                                    if (unreadAlerts > 0) {
+                                        Badge(containerColor = NexusGold, contentColor = NexusBackground) {
+                                            Text(unreadAlerts.toString())
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Login notifications", tint = NexusGold)
+                            }
+                        }
+
+                        // STRICT STEALTH: Owner/Admin Auditor Console icon is 100% hidden from unauthorized users
+                        if (effectiveTier.isAdminOrOwner) {
+                            IconButton(
+                                onClick = { viewModel.openOwnerAuditorSheet() },
+                                modifier = Modifier.testTag("hub_stealth_admin_button")
+                            ) {
+                                Icon(
+                                    Icons.Default.AdminPanelSettings,
+                                    contentDescription = "Owner & Admin Source Auditor",
+                                    tint = NexusViolet
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Hero Command Banner
         item {
             HubHeroBanner(
@@ -127,7 +229,7 @@ fun HubScreen(
                 onExportAllRegistry = {
                     val fullJson = JsonExportUtil.appsListToJson(apps)
                     JsonExportUtil.copyToClipboard(context, "apps.json", fullJson)
-                    viewModel.showStatus("Copied full apps.json registry (${apps.size} entries).")
+                    viewModel.showStatus("Copied visible apps.json registry (${apps.size} entries).")
                 }
             )
         }
@@ -135,11 +237,7 @@ fun HubScreen(
         // Platform Filter Row
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "PLATFORM DIRECTORY",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = NexusCyan
-                )
+                Text("PLATFORM DIRECTORY", style = MaterialTheme.typography.labelSmall, color = NexusCyan)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -174,11 +272,7 @@ fun HubScreen(
         // Type Filter Row
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "CLIENT & APP TYPE",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = NexusGold
-                )
+                Text("SATELLITE & CLIENT TYPE", style = MaterialTheme.typography.labelSmall, color = NexusGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -213,27 +307,22 @@ fun HubScreen(
         if (filteredApps.isEmpty()) {
             item {
                 NexusEmptyStateCard(
-                    title = "No clients match this filter",
-                    subtitle = "Try selecting 'All' platforms or register a custom app manifest."
+                    title = "No apps match this filter",
+                    subtitle = "Select 'All' or sync Summer-Warrior satellite repos."
                 )
             }
         } else {
             items(filteredApps, key = { it.id }) { app ->
+                val installed = remember(app.id, app.deepLinkScheme, app.androidPackageName) {
+                    viewModel.isInstalledOnDevice(context, app)
+                }
+                val authorized = viewModel.isAuthorizedToLaunch(app)
                 HubAppCard(
                     app = app,
+                    isInstalled = installed,
+                    isAuthorized = authorized,
                     onTogglePin = { viewModel.togglePinApp(app) },
-                    onLaunchInApp = {
-                        if (app.id.contains("vault", ignoreCase = true)) {
-                            viewModel.selectTab(1)
-                        } else {
-                            viewModel.selectTab(2)
-                        }
-                    },
-                    onOpenExternal = {
-                        openSafeExternalUrl(context, app.externalUrl) { err ->
-                            viewModel.showStatus(err)
-                        }
-                    },
+                    onRouteAction = { viewModel.onAppCardTapped(context, app) },
                     onShowJson = { exportingApp = app },
                     onDelete = if (app.isUserCreated) {
                         { viewModel.deleteUserApp(app.id) }
@@ -259,17 +348,11 @@ fun HubScreen(
         AlertDialog(
             onDismissRequest = { exportingApp = null },
             containerColor = NexusCard,
-            title = {
-                Text(
-                    text = "App Manifest JSON",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = NexusTextPrimary
-                )
-            },
+            title = { Text("App Manifest JSON", style = MaterialTheme.typography.titleLarge, color = NexusTextPrimary) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Paste into registry/apps.json in your GitHub repository:",
+                        text = "Paste into nexus-app.json or registry/apps.json in GitHub:",
                         style = MaterialTheme.typography.bodySmall,
                         color = NexusTextSecondary
                     )
@@ -298,9 +381,7 @@ fun HubScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { exportingApp = null }) {
-                    Text("Done", color = NexusCyan)
-                }
+                TextButton(onClick = { exportingApp = null }) { Text("Done", color = NexusCyan) }
             }
         )
     }
@@ -324,16 +405,16 @@ private fun HubHeroBanner(
         Box(modifier = Modifier.fillMaxWidth()) {
             Image(
                 painter = painterResource(id = R.drawable.img_hub_banner_1795407674042),
-                contentDescription = "Nexus Master Hub Command Bridge",
+                contentDescription = "Project MPV RP Master Hub Command Bridge",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(205.dp)
+                    .height(210.dp)
             )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(205.dp)
+                    .height(210.dp)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -355,7 +436,7 @@ private fun HubHeroBanner(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NexusPillBadge(text = "DATA-DRIVEN REGISTRY", accentColor = NexusCyan)
+                    NexusPillBadge(text = "SATELLITE ECOSYSTEM · GITHUB RELEASES", accentColor = NexusCyan)
                     OutlinedButton(
                         onClick = onExportAllRegistry,
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -370,12 +451,12 @@ private fun HubHeroBanner(
                 }
 
                 Text(
-                    text = "Nexus Master Hub",
+                    text = "Project MPV Master Hub",
                     style = MaterialTheme.typography.headlineMedium,
                     color = NexusTextPrimary
                 )
                 Text(
-                    text = "Honest upstream links for official locked clients plus an instant built-in Multi-TCG Tabletop & Infinite Card Vault.",
+                    text = "3-case satellite router (Launch Installed -> GitHub Release APK -> Web Portal). Zero Play Store links for public downloads.",
                     style = MaterialTheme.typography.bodySmall,
                     color = NexusTextSecondary
                 )
@@ -384,7 +465,7 @@ private fun HubHeroBanner(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    StatMiniTile("Clients", appCount.toString(), NexusCyan, Modifier.weight(1f))
+                    StatMiniTile("Satellites", appCount.toString(), NexusCyan, Modifier.weight(1f))
                     StatMiniTile("Vault Cards", cardCount.toString(), NexusGold, Modifier.weight(1f))
                     StatMiniTile("Lore Pages", loreCount.toString(), NexusViolet, Modifier.weight(1f))
                 }
@@ -398,14 +479,11 @@ private fun HubHeroBanner(
                         modifier = Modifier
                             .weight(1f)
                             .testTag("hero_launch_tabletop"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NexusCyan,
-                            contentColor = NexusBackground
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = NexusCyan, contentColor = NexusBackground)
                     ) {
                         Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Open Tabletop", maxLines = 1)
+                        Text("Play Tabletop", maxLines = 1)
                     }
                     OutlinedButton(
                         onClick = onRegisterApp,
@@ -446,16 +524,18 @@ private fun StatMiniTile(label: String, value: String, color: Color, modifier: M
 @Composable
 private fun HubAppCard(
     app: AppEntry,
+    isInstalled: Boolean,
+    isAuthorized: Boolean,
     onTogglePin: () -> Unit,
-    onLaunchInApp: () -> Unit,
-    onOpenExternal: () -> Unit,
+    onRouteAction: () -> Unit,
     onShowJson: () -> Unit,
     onDelete: (() -> Unit)?
 ) {
-    val typeAccent = when (app.type) {
-        "Official Client" -> NexusGold
-        "Web Game" -> NexusCyan
-        "Custom Clone" -> NexusViolet
+    val typeAccent = when {
+        app.hiddenFromUnauthorized -> NexusViolet
+        app.lockedUpstream -> NexusGold
+        app.accessTier == "OWNER_ONLY" -> NexusDanger
+        app.launchInApp -> NexusCyan
         else -> NexusCyan
     }
 
@@ -463,8 +543,12 @@ private fun HubAppCard(
         shape = RoundedCornerShape(16.dp),
         color = NexusCard,
         border = BorderStroke(
-            width = if (app.isPinned) 1.5.dp else 1.dp,
-            color = if (app.isPinned) NexusGold.copy(alpha = 0.65f) else NexusBorder
+            width = if (app.isPinned || app.hiddenFromUnauthorized) 1.5.dp else 1.dp,
+            color = when {
+                app.hiddenFromUnauthorized -> NexusViolet.copy(alpha = 0.75f)
+                app.isPinned -> NexusGold.copy(alpha = 0.65f)
+                else -> NexusBorder
+            }
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -479,39 +563,35 @@ private fun HubAppCard(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         NexusPillBadge(text = app.type, accentColor = typeAccent)
-                        if (app.version.isNotBlank()) {
-                            Text(
-                                text = app.version,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = NexusTextMuted
-                            )
+                        if (isInstalled) {
+                            NexusPillBadge(text = "INSTALLED", accentColor = NexusSuccess)
+                        }
+                        if (app.accessTier == "OWNER_ONLY") {
+                            NexusPillBadge(text = "OWNER_ONLY", accentColor = NexusDanger)
+                        }
+                        if (app.hiddenFromUnauthorized) {
+                            NexusPillBadge(text = "STEALTH ADMIN", accentColor = NexusViolet)
                         }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = app.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = NexusTextPrimary
-                    )
-                    if (app.subtitle.isNotBlank()) {
-                        Text(
-                            text = app.subtitle,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = typeAccent
+                    Text(text = app.name, style = MaterialTheme.typography.titleLarge, color = NexusTextPrimary)
+                    if (app.lockedUpstream) {
+                        NexusPillBadge(
+                            text = "LOCKED TO UPSTREAM GITHUB SOURCE (Base Rules Immutable)",
+                            accentColor = NexusGold
                         )
+                    } else if (app.subtitle.isNotBlank()) {
+                        Text(text = app.subtitle, style = MaterialTheme.typography.labelMedium, color = typeAccent)
                     }
                 }
                 Row {
-                    IconButton(
-                        onClick = onTogglePin,
-                        modifier = Modifier.testTag("pin_app_${app.id}")
-                    ) {
+                    IconButton(onClick = onTogglePin, modifier = Modifier.testTag("pin_app_${app.id}")) {
                         Icon(
                             imageVector = if (app.isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                             contentDescription = if (app.isPinned) "Unpin app" else "Pin app",
@@ -520,23 +600,14 @@ private fun HubAppCard(
                     }
                     if (onDelete != null) {
                         IconButton(onClick = onDelete) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteOutline,
-                                contentDescription = "Delete custom app",
-                                tint = NexusDanger
-                            )
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "Delete custom app", tint = NexusDanger)
                         }
                     }
                 }
             }
 
-            Text(
-                text = app.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = NexusTextSecondary
-            )
+            Text(text = app.description, style = MaterialTheme.typography.bodyMedium, color = NexusTextSecondary)
 
-            // Platform Badges Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -559,43 +630,48 @@ private fun HubAppCard(
                 }
             }
 
-            // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (app.launchInApp) {
-                    Button(
-                        onClick = onLaunchInApp,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("launch_inapp_${app.id}"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NexusCyan,
-                            contentColor = NexusBackground
-                        )
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Launch Now", maxLines = 1)
-                    }
-                } else if (app.externalUrl.isNotBlank()) {
-                    Button(
-                        onClick = onOpenExternal,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("open_external_${app.id}"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NexusSurface,
-                            contentColor = NexusCyan
-                        ),
-                        border = BorderStroke(1.dp, NexusCyan.copy(alpha = 0.6f))
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Open GitHub / Releases", maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                val ctaLabel = when {
+                    app.launchInApp -> "Launch Built-In"
+                    !isAuthorized -> "Owner / Tier Sign-In Required"
+                    app.lockedUpstream -> "Open Upstream GitHub"
+                    isInstalled -> "Open Installed App"
+                    else -> "Launch / GitHub Release"
+                }
+                Button(
+                    onClick = onRouteAction,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("route_app_${app.id}"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = when {
+                            !isAuthorized -> NexusSurface
+                            app.launchInApp || isInstalled -> NexusCyan
+                            else -> NexusSurface
+                        },
+                        contentColor = when {
+                            !isAuthorized -> NexusGold
+                            app.launchInApp || isInstalled -> NexusBackground
+                            else -> NexusCyan
+                        }
+                    ),
+                    border = if (!app.launchInApp && !isInstalled) BorderStroke(1.dp, if (isAuthorized) NexusCyan.copy(alpha = 0.6f) else NexusGold.copy(alpha = 0.6f)) else null
+                ) {
+                    Icon(
+                        imageVector = when {
+                            !isAuthorized -> Icons.Default.Lock
+                            app.launchInApp || isInstalled -> Icons.Default.PlayArrow
+                            else -> Icons.AutoMirrored.Filled.OpenInNew
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(ctaLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
 
                 OutlinedButton(
@@ -622,15 +698,16 @@ private fun RegisterAppManifestDialog(
     var name by remember { mutableStateOf("") }
     var subtitle by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("Custom Clone") }
-    var externalUrl by remember { mutableStateOf("https://github.com/") }
+    var selectedType by remember { mutableStateOf("TCG_TOOL") }
+    var deepLinkScheme by remember { mutableStateOf("nexus-custom-app://open") }
+    var externalUrl by remember { mutableStateOf("https://github.com/Summer-Warrior/") }
     val selectedPlatforms = remember { mutableStateListOf("Android", "Web") }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = NexusCard,
-        title = { Text("Register App Manifest", color = NexusTextPrimary) },
+        title = { Text("Register Satellite App Manifest", color = NexusTextPrimary) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -639,23 +716,28 @@ private fun RegisterAppManifestDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it; errorText = null },
-                    label = { Text("App / Client Name") },
+                    label = { Text("App / Satellite Name") },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_app_name")
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = subtitle,
                     onValueChange = { subtitle = it },
-                    label = { Text("Subtitle (e.g. Custom TCG Client)") },
+                    label = { Text("Subtitle") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = deepLinkScheme,
+                    onValueChange = { deepLinkScheme = it },
+                    label = { Text("Deep-Link Scheme (e.g. nexus-app://open)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = externalUrl,
                     onValueChange = { externalUrl = it; errorText = null },
-                    label = { Text("HTTPS Repo / Download URL") },
+                    label = { Text("HTTPS GitHub Repo / Web URL") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -666,22 +748,14 @@ private fun RegisterAppManifestDialog(
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                Text("App Type", style = MaterialTheme.typography.labelSmall, color = NexusGold)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    listOf("Official Client", "Custom Clone", "Web Game", "Tool").forEach { t ->
-                        FilterChip(
-                            selected = selectedType == t,
-                            onClick = { selectedType = t },
-                            label = { Text(t, style = MaterialTheme.typography.labelSmall) }
-                        )
+                    listOf("TCG_TOOL", "TCG_CLIENT", "LORE_WIKI", "ASSET_VAULT", "ENGINE_SANDBOX").forEach { t ->
+                        FilterChip(selected = selectedType == t, onClick = { selectedType = t }, label = { Text(t, style = MaterialTheme.typography.labelSmall) })
                     }
                 }
-
-                Text("Platforms", style = MaterialTheme.typography.labelSmall, color = NexusCyan)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -695,10 +769,7 @@ private fun RegisterAppManifestDialog(
                         )
                     }
                 }
-
-                errorText?.let {
-                    Text(it, color = NexusDanger, style = MaterialTheme.typography.bodySmall)
-                }
+                errorText?.let { Text(it, color = NexusDanger, style = MaterialTheme.typography.bodySmall) }
             }
         },
         confirmButton = {
@@ -706,12 +777,8 @@ private fun RegisterAppManifestDialog(
                 onClick = {
                     val trimmedName = name.trim()
                     val trimmedUrl = externalUrl.trim()
-                    if (trimmedName.isBlank()) {
-                        errorText = "App name is required."
-                        return@Button
-                    }
-                    if (trimmedUrl.isNotBlank() && !trimmedUrl.startsWith("https://")) {
-                        errorText = "URL must start with https://"
+                    if (trimmedName.isBlank() || (trimmedUrl.isNotBlank() && !trimmedUrl.startsWith("https://"))) {
+                        errorText = "Provide a name and valid https:// URL."
                         return@Button
                     }
                     val slug = trimmedName.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
@@ -720,9 +787,11 @@ private fun RegisterAppManifestDialog(
                             id = "${slug.ifBlank { "app" }}-${UUID.randomUUID().toString().take(4)}",
                             name = trimmedName,
                             subtitle = subtitle.trim().ifBlank { selectedType },
-                            description = description.trim().ifBlank { "Community registered manifest." },
+                            description = description.trim().ifBlank { "Community registered satellite manifest." },
                             type = selectedType,
                             platforms = selectedPlatforms.toList().ifEmpty { listOf("Web") },
+                            deepLinkScheme = deepLinkScheme.trim(),
+                            webUrl = trimmedUrl,
                             externalUrl = trimmedUrl,
                             launchInApp = false,
                             version = "Custom",
@@ -731,16 +800,11 @@ private fun RegisterAppManifestDialog(
                         )
                     )
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = NexusCyan, contentColor = NexusBackground),
-                modifier = Modifier.testTag("save_app_manifest_button")
-            ) {
-                Text("Save & Export JSON")
-            }
+                colors = ButtonDefaults.buttonColors(containerColor = NexusCyan, contentColor = NexusBackground)
+            ) { Text("Save & Export JSON") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = NexusTextSecondary)
-            }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = NexusTextSecondary) }
         }
     )
 }

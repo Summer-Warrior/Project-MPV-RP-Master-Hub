@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
@@ -43,13 +42,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.screens.CardVaultScreen
+import com.example.ui.screens.DiscordAuthDialog
 import com.example.ui.screens.DiscordRpScreen
+import com.example.ui.screens.GitHubDownloadSheetDialog
 import com.example.ui.screens.HubScreen
+import com.example.ui.screens.LoginNotificationsDialog
 import com.example.ui.screens.LoreWikiScreen
+import com.example.ui.screens.OwnerAdminAuditorDialog
 import com.example.ui.screens.TabletopScreen
 import com.example.ui.theme.NexusBackground
 import com.example.ui.theme.NexusCard
@@ -79,7 +83,13 @@ private val NEXUS_NAV_SECTIONS = listOf(
 fun NexusMasterHubApp(viewModel: NexusViewModel) {
     val selectedIndex by viewModel.selectedNavIndex.collectAsStateWithLifecycle()
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
+    val showAuthDialog by viewModel.showAuthDialog.collectAsStateWithLifecycle()
+    val showNotificationsDialog by viewModel.showNotificationsDialog.collectAsStateWithLifecycle()
+    val showOwnerAuditorSheet by viewModel.showOwnerAuditorSheet.collectAsStateWithLifecycle()
+    val effectiveTier by viewModel.effectiveTier.collectAsStateWithLifecycle()
+    val pendingDownload by viewModel.pendingDownloadSheet.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(statusMessage) {
         statusMessage?.let { msg ->
@@ -88,7 +98,6 @@ fun NexusMasterHubApp(viewModel: NexusViewModel) {
         }
     }
 
-    // Back press on secondary sections returns cleanly to Hub
     BackHandler(enabled = selectedIndex != 0) {
         viewModel.selectTab(0)
     }
@@ -157,7 +166,7 @@ fun NexusMasterHubApp(viewModel: NexusViewModel) {
                         Box(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .widthIn(max = 840.dp)
+                                .widthIn(max = 860.dp)
                         ) {
                             NexusSectionHost(selectedIndex = selectedIndex, viewModel = viewModel)
                         }
@@ -217,6 +226,28 @@ fun NexusMasterHubApp(viewModel: NexusViewModel) {
                 }
             }
         }
+    }
+
+    // Global Modals (Auth, Case 2 GitHub Download Sheet, Owner Login Alerts, Stealth Admin Auditor)
+    if (showAuthDialog) {
+        DiscordAuthDialog(viewModel = viewModel, onDismiss = { viewModel.dismissAuthDialog() })
+    }
+
+    pendingDownload?.let { decision ->
+        GitHubDownloadSheetDialog(
+            decision = decision,
+            onDownloadFromGitHub = { url -> viewModel.openGitHubReleaseAssetDownload(context, url) },
+            onOpenWebFallback = { viewModel.openWebFallbackFromDownloadSheet(context, decision.app) },
+            onDismiss = { viewModel.dismissDownloadSheet() }
+        )
+    }
+
+    if (showNotificationsDialog) {
+        LoginNotificationsDialog(viewModel = viewModel, onDismiss = { viewModel.dismissNotificationsDialog() })
+    }
+
+    if (showOwnerAuditorSheet && effectiveTier.isAdminOrOwner) {
+        OwnerAdminAuditorDialog(viewModel = viewModel, onDismiss = { viewModel.dismissOwnerAuditorSheet() })
     }
 }
 
